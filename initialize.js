@@ -176,11 +176,8 @@ SPICEWORKS.app.helpdesk.ticket.ready(function(){
     // Find audio file extension
     ext = anchor.innerHTML.replace(/.*(\.[\w]+)$/, "$1");
 
-    // IE Is a piece of trash.  Let's jump through
-    // hoops to at least get IE9 working.
-    isMSIE = /*@cc_on!@*/false;
-
-    if (isMSIE) {
+    // IE is a pain.  Let's jump through hoops to at least get IE9 working.
+    if (Prototype.Browser.IE) {
       previewDiv.innerHTML = '<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" '+
         'width="' + plugin.settings.desired_tb_width + '" height="30" id="iapAudio' + num +'" ' +
         'align="middle"><param name="movie" value="/test/wavplayer.swf"/><param name="flashvars" value="' +
@@ -189,7 +186,11 @@ SPICEWORKS.app.helpdesk.ticket.ready(function(){
     } else {
       object = document.createElement('object');
       object.type = 'application/x-shockwave-flash';
-      object.data = '/test/wavplayer.swf'; //plugin.contentUrl('wavplayer.swf');
+      // We're not allowed to upload flash content into a plugin content store.
+      // Until that's available, we have to copy the flash content onto the
+      // server ($SPICEWORKS_HOME\pkg\gems\spiceworks_public-*\flash).
+      //object.data = plugin.contentUrl('/flash/wavplayer.swf');
+      object.data = '/flash/wavplayer.swf';
       object.width = plugin.settings.desired_tb_width;
       object.height = '30';
       object.align = 'middle';
@@ -232,8 +233,14 @@ SPICEWORKS.app.helpdesk.ticket.ready(function(){
       anchors, i, DEBUG;
 
     attachmentRegExp = /\/tickets\/attachment/i;
-    imageRegExp = /\.(png|jpg|jpeg|gif|bmp|tif|tiff)/i;
     audioRegExp = /\.(au|raw|sln(\d{1,3})?|al(aw)?|ul(aw)?|pcm|mu|la|lu|gsm|mp3|wave?)/i;
+
+    // Only IE & Safari support TIFF
+    if (Prototype.Browser.IE || Prototype.Browser.WebKit) {
+      imageRegExp = /\.(png|jpe?g|gif|bmp|tiff?)/i;
+    } else {
+      imageRegExp = /\.(png|jpe?g|gif|bmp)/i;
+    }
 
     anchors = document.getElementById('item_summary_content').getElementsByTagName('a');
 
