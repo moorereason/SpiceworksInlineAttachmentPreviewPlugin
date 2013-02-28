@@ -1,24 +1,23 @@
-#imgbox1 {
+.iapViewer {
   position:fixed;
-  background:#3B3B3C;
-  color:white;
-  filter:Alpha(Opacity=100);
-  visibility:hidden;
   height:auto;
   z-index:999;
   overflow:hidden;
+  visibility:hidden;
+  background:#3B3B3C;
+  color:white;
   text-align:center;
-  //margin:0 auto;
   right:20px;
-  //left:0px;
   top:50px;
   box-shadow:5px 5px 5px #969697;
 }
-.drop {
+.iapDrop {
   box-shadow:5px 5px 5px #969697;
 }
-.imgcontainer {
+.iapImgContainer {
  padding-left:20px;
  padding-bottom:10px;
 }
-
+.iapAudioPreview {
+ padding: 0 0 10px 20px;
+}

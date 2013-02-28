@@ -1,253 +1,255 @@
 /*
-Attachment Image Viewer
-Created by Rob Bittner:
-Modified by Rob Dunn:
-  Added configuration option for width
-  Added auto height adjustment for correct aspect ratio
-  Added hidden div for preview (instead of new tab)
-  Added configuration options for width of thumbnail and larger image
-  Added padding to left and bottom of image thumbnail
-Version History
+Inline Attachment Preview
+Created by Cameron Moore.
+Based on the "Pop-up inline attachment viewer" by Rob Dunn.
 
-Modified:
-1.16 - Added simple document icon for any attachments that are not images (as defined by the plugin)
-       Made change to remedy DOM rendering problem until page refresh.
-1.15 - Tweaked the position of the pop-up image for SW 6.0
-1.14 - Changed image dimensions so it looks more at what your browser window size is.  The default setting
-   you specify will be the preferred width, but if your browser window is smaller, it will adjust accordingly
- Added ESC keypress function - this will close the pop-up image
- Added drop-shadow effect
- Added code so if any image falls below the width threshold, it won't allow you to do a preview 
-  (good for signatures or other small images)
- Moved image pop-up to the right side of the screen
- Added context-title with original image dimensions on thumbnail pics
-1.13 - Added feature so if actual image's width is less than the inline thumbnail width, then don't offer to pop-up the larger scale image.  This will help keep smaller pics like signatures, stationary tiles, and so on in check while allowing you to pop-up actual screenshots of windows, etc.
-1.12 - Modified default width value for large image to 600px instead of 200px.
-1.11 RD : Initial mod release (Rob Dunn), titled:
-"Pop-up inline attachment viewer"
-
-Original:
-.1 & 1.0 : Initial Release
-1.1 : Added preview and new window popup for full image
-1.11 : Fixed the full window creation
+https://github.com/moorereason/SpiceworksInlineAttachmentPreviewPlugin
 */
 
-
-
-plugin.configure({
-    settingDefinitions:[
-     { name:'desired_tb_width', label:'Desired thumbnail width (px)', type:'enumeration', defaultValue:'200', options:['100', '200', '300','400']},
-     { name:'desired_width', label:'Desired image width (px)', type:'enumeration', defaultValue:'600', options:['600','700','800','900']}
-      
-    ]
-});
 plugin.includeStyles();
+plugin.configure({
+  settingDefinitions:[
+    { name:'desired_tb_width', label:'Desired thumbnail width (px)', type:'enumeration', defaultValue:'200', options:['100', '200', '300','400']},
+    { name:'desired_width', label:'Desired image width (px)', type:'enumeration', defaultValue:'600', options:['600','700','800','900']},
+    { name:'disable_audio', label:'Disable Audio Player', type:'checkbox', defaultValue: false }
+  ]
+});
+
 
 SPICEWORKS.app.helpdesk.ticket.ready(function(){
- document.onkeyup = key_event;
- 
-  var ticketSummary = document.getElementById("item_summary_content");
-  var anchors = ticketSummary.getElementsByTagName("a");
-  var attachmentRegExp = /\/tickets\/attachment/i;
-  var imageRegExp = /\.(png|jpg|jpeg|gif|bmp|tif|tiff)/i;
+  var DEBUG = true;
 
-  for(i=0; i<anchors.length; i++) {
-    var anchor = anchors[i];
-    //console.log(anchor.href + " " + anchor.innerHTML);
-    if (attachmentRegExp.test(anchor.href) &&
-        imageRegExp.test(anchor.innerHTML)){
-      //console.log("processing");
-      //if this really is a hyperlink with a pic, continue.
-      
-      var li = anchor.parentNode.parentNode.parentNode;
-      li.appendChild(document.createElement("br"));
-      
-      //Create DIV for images
-      var body = document.getElementsByTagName("body")[0];
-      var odiv = document.createElement("div");
-      odiv.id = "imgbox1";
-      body.appendChild(odiv);
-      var odiv1= document.createElement("div");
-      odiv1.className="imgcontainer";
-      var img = document.createElement("img");
+  ///
+  /// Close the viewer
+  ///
+  function iapCloseViewer(obj) {
+    obj.parentNode.style.visibility = 'hidden';
+  }
 
-      img.src=anchor.href;
-      img.className= "drop";
-      img.style.height="auto";
-      img.style.textalign="center";
-      img.id = "image" + i;
-      //get the dimensions of the loaded image.
-      var imagewidth = img.width;
-      var imageheight = img.height;
-      //if the page doesn't render DOM quick enough, 
-      //we'll default to the thumbnail size, then size it
-      //back up if things work the way they should for 
-      //images that are smaller than the thumbnail preference.
-      img.style.width = plugin.settings.desired_tb_width + "px";
-      img.style.cursor="pointer";   
-      img.style.width = plugin.settings.desired_tb_width + "px";
-      img.onclick=function(){ Large(this);};
-      img.title="Click for full version (original size: " + imagewidth + " x " + imageheight + ")";
-         
-      //let's append them via DOM
-      li.appendChild(odiv1);
-      odiv1.appendChild(img);
-          
+  ///
+  /// Hide all iapViewer divs
+  ///
+  function iapHideViewers() {
+    var divs, i;
 
-      //alert(imagewidth);
-      //Resize the images for the thumbnail if the image is 
-      //smaller than the thumbnail preference
-      if (imagewidth < plugin.settings.desired_tb_width){
-         img.style.cursor="normal";
-         img.style.width = imagewidth;
-         img.style.height = "auto";
-         img.onclick=null;
-         img.title="image size: " + imagewidth + " x " + imageheight;
+    divs = document.getElementsByClassName('iapViewer');
+
+    for (i = 0; i < divs.length; i += 1) {
+      divs[i].style.visibility = 'hidden';
+    }
+  }
+
+  ///
+  /// Show Image Viewer
+  ///
+  function iapShowViewer(obj){
+    var num, div, img, span, br, width, factor;
+
+    // Hide any visible viewers
+    iapHideViewers();
+    
+    // Find the matching viewer div for this img
+    num = obj.id.replace(/\D*(\d+)$/, '$1');
+    
+    div = document.getElementById('iapViewer' + num);
+
+    // If the div is empty, create a span and img;
+    // otherwise, just leave it alone
+    if (div.innerHTML.blank()) {
+      // Create a box at the top of the viewer
+      span = document.createElement('span');
+      span.style.fontSize = '120%';
+      span.innerHTML = 'Click to close';
+      div.appendChild(span);
+
+      br = document.createElement('br');
+      div.appendChild(br);
+
+      // Since we're linking to an image that should
+      // already be loaded in the DOM, we'll bypass
+      // using the onLoad stuff
+      img = document.createElement('img');
+      img.src = obj.src;
+
+      // If the client computer's screen width is smaller than
+      // the preferred pop-up image width setting, then reset
+      // that preference half the screen width.
+      if (document.viewport.getWidth() < plugin.settings.desired_width){
+        width = document.viewport.getWidth() / 2;
+      } else {
+        width = plugin.settings.desired_width;
       }
-      
 
-     }
-    //if this is not a supported file, let's put a generic document
-    //icon in place.
-    else if (attachmentRegExp.test(anchor.href) &&
-      !imageRegExp.test(anchor.innerHTML)){
-      var li = anchor.parentNode.parentNode.parentNode;
-      li.appendChild(document.createElement("br"));
-      
-      //Create DIV for images
-      var body = document.getElementsByTagName("body")[0];
-      var odiv = document.createElement("div");
-      
-      odiv.id = "imgbox1";
-      body.appendChild(odiv);
-      
-      var odiv1= document.createElement("div");
-      
-      odiv1.className="imgcontainer";
-    
-      var img = document.createElement("img");
-      img.src=plugin.contentUrl('document.png');
-      //img.className= "drop";
-      img.style.height="auto";
-      img.style.textalign="center";
-      img.id = "image" + i;
-      //alert(img.src);
-      li.appendChild(odiv1);
-      odiv1.appendChild(img); 
+      // take smaller one
+      factor = Math.min((document.viewport.getHeight() - 60) / img.height,
+                        width / img.width);
+
+      img.style.width = img.width * factor + 'px';
+      img.style.height = img.height * factor + 'px';
+      img.style.cursor = 'pointer';
+      img.onclick = function(){ iapCloseViewer(this); };
+
+      div.appendChild(img);
     }
+
+    div.style.visibility = 'visible';
   }
 
-  
-  function key_event(e) {
-    if (e.keyCode == 27) Out();
-  }
-  
-function getElementLeft(elm) 
-{
-    var x = 0;
+  ///
+  /// Set image dimensions upon load
+  ///
+  function iapFinishThumbImg(){
+    if (DEBUG) { console.log('IMAGE LOADED: ' + this.id); }
 
-    //set x to elms offsetLeft
-    x = elm.offsetLeft;
+    this.className = 'iapDrop';
+    this.style.textalign = 'center';
 
-    //set elm to its offsetParent
-    elm = elm.offsetParent;
-
-    //use while loop to check if elm is null
-    // if not then add current elms offsetLeft to x
-    //offsetTop to y and set elm to its offsetParent
-
-    while(elm != null)
-    {
-        x = parseInt(x) + parseInt(elm.offsetLeft);
-        elm = elm.offsetParent;
-    }
-    return x;
-}
-  
-function loadFailure() {
-    alert("'" + this.name + "' failed to load.");
-    return true;
-}
-
-                                     
-function getElementTop(elm) 
-{
-    var y = 0;
-
-    //set x to elms offsetLeft
-    y = elm.offsetTop;
-
-    //set elm to its offsetParent
-    elm = elm.offsetParent;
-
-    //use while loop to check if elm is null
-    // if not then add current elm offsetLeft to x
-    //offsetTop to y and set elm to its offsetParent
-
-    while(elm != null)
-    {
-        y = parseInt(y) + parseInt(elm.offsetTop);
-        elm = elm.offsetParent;
-    }
-
-    return y;
-}  
-  
-function Large(obj)
-{   
-    var imgbox=document.getElementById("imgbox1");
-    imgbox.style.visibility='visible';
-    
-    var img = document.createElement("img");
-    
-    img.src=obj.src;
-    
-    // If the client computer's screen width is smaller than
-    // the preferred pop-up image width setting, then reset 
-    // that preference to 300px less than the screen width.
-    if(window.innerWidth < plugin.settings.desired_width){
-     plugin.settings.desired_width = window.innerWidth/2; 
-    }
-
-    // resize Image that it fills the the maxImage boundaries
-    //var maxImageHeight = 800; 
-    var h = img.height;
-    var w = img.width;
-    
-    // get resize factory to fit boundary
-    hfactor = (window.innerHeight - 60) / h;
-    wfactor = plugin.settings.desired_width / w;
-    
-    //alert(window.innerHeight);
-    
-    // take smaller one
-    var factor = Math.min(hfactor, wfactor);
-  
-    if(img.addEventListener){
-        img.addEventListener('click',Out,false);
+    // If the image is small, we don't need to setup for the viewer
+    if (this.width <= plugin.settings.desired_tb_width){
+      this.style.width = this.width;
     } else {
-        img.attachEvent('onclick',Out);
+      this.style.cursor = 'pointer';
+      this.title = 'Click for full version (original size: ' + this.width + ' x ' + this.height + ')';
+      this.onclick = function(){ iapShowViewer(this); };
+      // Prototype 1.6 observe() doesn't work here in IE9
+      //this.observe('click', iapShowViewer);
+      this.style.width = plugin.settings.desired_tb_width + 'px';
     }
-    //alert(plugin.settings.desired_width);
-    //img.style.width=plugin.settings.desired_width + "px";
-    //img.style.height='auto';
-    //alert(window.innerHeight - (window.innerHeight *.3)); 
-    
-    img.style.width = w * factor + "px";
-    img.style.height = h * factor + "px";
-    img.style.cursor = "pointer";
-    
-    imgbox.innerHTML="<span style='font-size:120%;'>Click to close</span><br>";
-    imgbox.appendChild(img);
-    //imgbox.style.left=plugin.settings.desired_width/3 +'px';
-    //imgbox.style.top=imgwidth/3 + 'px';
-}
+    this.style.visibility = 'visible';
+  }
 
-function Out()
-{
-    document.getElementById("imgbox1").style.visibility='hidden';
-}
+  ///
+  /// Process an image attachment
+  ///
+  function iapImageHandler(anchor, num){
+    var body, viewerDiv, comment, previewDiv, img;
 
+    if (DEBUG){ console.log('IMAGE: ' + anchor.href + '|' + anchor.innerHTML); }
 
-  
+    // Get the list item of the current comment
+    comment = anchor.parentNode.parentNode.parentNode;
+
+    // Create viewer div
+    body = document.getElementsByTagName('body')[0];
+    viewerDiv = document.createElement('div');
+    viewerDiv.id = 'iapViewer' + num;
+    viewerDiv.className = 'iapViewer';
+    body.appendChild(viewerDiv);
+
+    // Create preview div
+    previewDiv = document.createElement('div');
+    previewDiv.className = 'iapImgContainer';
+
+    // Build the img tag
+    img = document.createElement('img');
+    img.id = 'iapImg' + num;
+    // Hide until it's loaded
+    img.style.visibility = 'hidden';
+
+    // We need the image to load into the DOM before
+    // we can know its dimensions, so we'll use an
+    // onLoad function to finish things up.
+    // NOTE: IE needs onload() set before the src.
+    img.onload = iapFinishThumbImg;
+    img.src = anchor.href;
+
+    // let's append them via DOM
+    comment.appendChild(previewDiv);
+    previewDiv.appendChild(img);
+  }
+
+  ///
+  /// Process an audio attachment
+  ///
+  function iapAudioHandler(anchor, num){
+    var comment, previewDiv, object, param, ext, isMSIE;
+
+    if (DEBUG){ console.log('AUDIO: ' + anchor.href + '|' + anchor.innerHTML); }
+
+    // Get the list item of the current comment
+    comment = anchor.parentNode.parentNode.parentNode;
+
+    previewDiv = document.createElement('div');
+    previewDiv.className = 'iapAudioPreview';
+    comment.appendChild(previewDiv);
+
+    // Find audio file extension
+    ext = anchor.innerHTML.replace(/.*(\.[\w]+)$/, "$1");
+
+    // IE Is a piece of trash.  Let's jump through
+    // hoops to at least get IE9 working.
+    isMSIE = /*@cc_on!@*/false;
+
+    if (isMSIE) {
+      previewDiv.innerHTML = '<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" '+
+        'width="' + plugin.settings.desired_tb_width + '" height="30" id="iapAudio' + num +'" ' +
+        'align="middle"><param name="movie" value="/test/wavplayer.swf"/><param name="flashvars" value="' +
+        'gui=full&button_color=#000000&h=30&w=' + plugin.settings.desired_tb_width +
+        '&sound=' + anchor.href + '%3F' + ext + '"/></object>';
+    } else {
+      object = document.createElement('object');
+      object.type = 'application/x-shockwave-flash';
+      object.data = '/test/wavplayer.swf'; //plugin.contentUrl('wavplayer.swf');
+      object.width = plugin.settings.desired_tb_width;
+      object.height = '30';
+      object.align = 'middle';
+      object.id = 'iapAudio' + num;
+      previewDiv.appendChild(object);
+
+      param = document.createElement('param');
+      param.name = 'flashvars';
+      param.value = 'gui=full&button_color=#000000&h=' + object.height + '&w=' + object.width + '&sound=' + anchor.href + '%3F' + ext;
+      object.appendChild(param);
+    }
+  }
+
+  ///
+  /// Process unknown attachment; just insert an generic icon
+  ///
+  function iapOtherHandler(anchor, num){
+    var comment, previewDiv, img;
+
+    comment = anchor.parentNode.parentNode.parentNode;
+
+    previewDiv = document.createElement('div');
+    previewDiv.className = 'iapImgContainer';
+
+    img = document.createElement('img');
+    img.src = plugin.contentUrl('document.png');
+    img.style.height = 'auto';
+    img.style.textalign = 'center';
+    img.id = 'iapDoc' + num;
+
+    previewDiv.appendChild(img);
+    comment.appendChild(previewDiv);
+  }
+
+  ///
+  /// Main loop
+  ///
+  function iapMain(){
+    var attachmentRegExp, imageRegExp, audioRegExp,
+      anchors, i, DEBUG;
+
+    attachmentRegExp = /\/tickets\/attachment/i;
+    imageRegExp = /\.(png|jpg|jpeg|gif|bmp|tif|tiff)/i;
+    audioRegExp = /\.(au|raw|sln(\d{1,3})?|al(aw)?|ul(aw)?|pcm|mu|la|lu|gsm|mp3|wave?)/i;
+
+    anchors = document.getElementById('item_summary_content').getElementsByTagName('a');
+
+    for (i = 0; i < anchors.length; i += 1) {
+
+      if (DEBUG){ console.log('ANCHOR: ' + anchors[i].href + '|' + anchors[i].innerHTML); }
+
+      if (attachmentRegExp.test(anchors[i].href) && imageRegExp.test(anchors[i].innerHTML)){
+        iapImageHandler(anchors[i], i);
+      } else if (attachmentRegExp.test(anchors[i].href) && audioRegExp.test(anchors[i].innerHTML) && !plugin.settings.disable_audio) {
+        iapAudioHandler(anchors[i], i);
+      } else if (attachmentRegExp.test(anchors[i].href) && !imageRegExp.test(anchors[i].innerHTML)){
+        iapOtherHandler(anchors[i], i);
+      }
+    }
+  }
+
+  iapMain();
 });
