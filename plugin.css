@@ -1,0 +1,24 @@
+#imgbox1 {
+  position:fixed;
+  background:#3B3B3C;
+  color:white;
+  filter:Alpha(Opacity=100);
+  visibility:hidden;
+  height:auto;
+  z-index:999;
+  overflow:hidden;
+  text-align:center;
+  //margin:0 auto;
+  right:20px;
+  //left:0px;
+  top:50px;
+  box-shadow:5px 5px 5px #969697;
+}
+.drop {
+  box-shadow:5px 5px 5px #969697;
+}
+.imgcontainer {
+ padding-left:20px;
+ padding-bottom:10px;
+}
+
