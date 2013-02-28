@@ -8,15 +8,31 @@ https://github.com/moorereason/SpiceworksInlineAttachmentPreviewPlugin
 
 plugin.includeStyles();
 plugin.configure({
-	settingDefinitions:[
-		{ name:'desired_tb_width', label:'Desired thumbnail width (px)', type:'enumeration', defaultValue:'200', options:['100', '200', '300','400']},
-		{ name:'desired_width', label:'Desired image width (px)', type:'enumeration', defaultValue:'600', options:['600','700','800','900']},
-		{ name:'disable_audio', label:'Disable Audio Player', type:'checkbox', defaultValue: false }
+	settingDefinitions: [
+		{
+			name: 'desired_tb_width',
+			label: 'Desired thumbnail width (px)',
+			type: 'enumeration',
+			defaultValue: '200',
+			options: ['100', '200', '300', '400']
+		},
+		{
+			name: 'desired_width',
+			label: 'Desired image width (px)',
+			type: 'enumeration',
+			defaultValue: '600',
+			options: ['600', '700', '800', '900']
+		},
+		{
+			name: 'disable_audio',
+			label: 'Disable Audio Player',
+			type: 'checkbox',
+			defaultValue: false
+		}
 	]
 });
 
-
-SPICEWORKS.app.helpdesk.ticket.ready(function() {
+SPICEWORKS.app.helpdesk.ticket.ready(function () {
 	var DEBUG = true;
 
 	///
@@ -86,7 +102,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function() {
 			img.style.width = img.width * factor + 'px';
 			img.style.height = img.height * factor + 'px';
 			img.style.cursor = 'pointer';
-			img.onclick = function(){ iapCloseViewer(this); };
+			img.onclick = function () { iapCloseViewer(this); };
 
 			div.appendChild(img);
 		}
@@ -109,7 +125,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function() {
 		} else {
 			this.style.cursor = 'pointer';
 			this.title = 'Click for full version (original size: ' + this.width + ' x ' + this.height + ')';
-			this.onclick = function(){ iapShowViewer(this); };
+			this.onclick = function () { iapShowViewer(this); };
 			// Prototype 1.6 observe() doesn't work here in IE9
 			//this.observe('click', iapShowViewer);
 			this.style.width = plugin.settings.desired_tb_width + 'px';
@@ -161,7 +177,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function() {
 	/// Process an audio attachment
 	///
 	function iapAudioHandler(anchor, num) {
-		var comment, previewDiv, object, param, ext, isMSIE;
+		var comment, previewDiv, object, param, ext;
 
 		if (DEBUG) { console.log('AUDIO: ' + anchor.href + '|' + anchor.innerHTML); }
 
@@ -173,7 +189,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function() {
 		comment.appendChild(previewDiv);
 
 		// Find audio file extension
-		ext = anchor.innerHTML.replace(/.*(\.[\w]+)$/, "$1");
+		ext = anchor.innerHTML.match(/(\.[\w]+)$/)[0];
 
 		// IE is a pain.	Let's jump through hoops to at least get IE9 working.
 		if (Prototype.Browser.IE) {
