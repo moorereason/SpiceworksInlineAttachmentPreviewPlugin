@@ -230,13 +230,14 @@ SPICEWORKS.app.helpdesk.ticket.ready(function(){
   ///
   function iapMain(){
     var attachmentRegExp, imageRegExp, audioRegExp,
-      anchors, i, DEBUG;
+      anchors, i;
 
     attachmentRegExp = /\/tickets\/attachment/i;
     audioRegExp = /\.(au|raw|sln(\d{1,3})?|al(aw)?|ul(aw)?|pcm|mu|la|lu|gsm|mp3|wave?)/i;
 
-    // Only IE & Safari support TIFF
-    if (Prototype.Browser.IE || Prototype.Browser.WebKit) {
+    // Only IE & Safari support TIFF as of Feb 2013, but Prototype can't
+    // differentiate between Webkit browsers, so I'm not about to try.
+    if (Prototype.Browser.IE) {
       imageRegExp = /\.(png|jpe?g|gif|bmp|tiff?)/i;
     } else {
       imageRegExp = /\.(png|jpe?g|gif|bmp)/i;
