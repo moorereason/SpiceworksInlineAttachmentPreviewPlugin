@@ -10,24 +10,28 @@ plugin.includeStyles();
 plugin.configure({
 	settingDefinitions: [
 		{
-			name: 'desired_tb_width',
-			label: 'Desired thumbnail width (px)',
+			name: 'max_tb_width',
+			label: 'Max thumbnail width',
 			type: 'enumeration',
 			defaultValue: '200',
-			options: ['100', '200', '300', '400']
+			options: ['100', '200', '300', '400'],
+			example: 'pixels'
 		},
 		{
-			name: 'desired_width',
-			label: 'Desired image width (px)',
+			name: 'max_viewer_width',
+			label: 'Max viewer width',
 			type: 'enumeration',
 			defaultValue: '600',
-			options: ['600', '700', '800', '900']
+			options: ['600', '700', '800', '900'],
+			example: 'pixels'
 		},
 		{
-			name: 'disable_audio',
-			label: 'Disable Audio Player',
-			type: 'checkbox',
-			defaultValue: false
+			name: 'audio_pref',
+			label: 'Audio Preference',
+			type: 'enumeration',
+			defaultValue: 'Disabled',
+			options: ['Flash', 'HTML5', 'Disabled'],
+			example: 'Flash option requires additional steps.'
 		}
 	]
 });
@@ -90,10 +94,10 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 			// If the client computer's screen width is smaller than
 			// the preferred pop-up image width setting, then reset
 			// that preference half the screen width.
-			if (document.viewport.getWidth() < plugin.settings.desired_width) {
+			if (document.viewport.getWidth() < plugin.settings.max_viewer_width) {
 				width = document.viewport.getWidth() / 2;
 			} else {
-				width = plugin.settings.desired_width;
+				width = plugin.settings.max_viewer_width;
 			}
 
 			// take smaller one
@@ -120,7 +124,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 		this.style.textalign = 'center';
 
 		// If the image is small, we don't need to setup for the viewer
-		if (this.width <= plugin.settings.desired_tb_width) {
+		if (this.width <= plugin.settings.max_tb_width) {
 			this.style.width = this.width;
 		} else {
 			this.style.cursor = 'pointer';
@@ -128,7 +132,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 			this.onclick = function () { iapShowViewer(this); };
 			// Prototype 1.6 observe() doesn't work here in IE9
 			//this.observe('click', iapShowViewer);
-			this.style.width = plugin.settings.desired_tb_width + 'px';
+			this.style.width = plugin.settings.max_tb_width + 'px';
 		}
 		this.style.visibility = 'visible';
 	}
@@ -177,7 +181,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 	/// Process an audio attachment
 	///
 	function iapAudioHandler(anchor, num) {
-		var comment, previewDiv, object, param, ext;
+		var comment, previewDiv, audio, object, param, ext;
 
 		if (DEBUG) { console.log('AUDIO: ' + anchor.href + '|' + anchor.innerHTML); }
 
@@ -191,31 +195,38 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 		// Find audio file extension
 		ext = anchor.innerHTML.match(/(\.[\w]+)$/)[0];
 
-		// IE is a pain.	Let's jump through hoops to at least get IE9 working.
-		if (Prototype.Browser.IE) {
-			previewDiv.innerHTML = '<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" ' +
-				'width="' + plugin.settings.desired_tb_width + '" height="30" id="iapAudio' + num + '" ' +
-				'align="middle"><param name="movie" value="/test/wavplayer.swf"/><param name="flashvars" value="' +
-				'gui=full&button_color=#000000&h=30&w=' + plugin.settings.desired_tb_width +
-				'&sound=' + anchor.href + '%3F' + ext + '"/></object>';
+		if (plugin.settings.audio_pref === 'HTML5') {
+			audio = new Audio();
+			audio.controls = true;
+			audio.src = anchor.href;
+			previewDiv.appendChild(audio);
 		} else {
-			object = document.createElement('object');
-			object.type = 'application/x-shockwave-flash';
-			// We're not allowed to upload flash content into a plugin content store.
-			// Until that's available, we have to copy the flash content onto the
-			// server ($SPICEWORKS_HOME\pkg\gems\spiceworks_public-*\flash).
-			//object.data = plugin.contentUrl('/flash/wavplayer.swf');
-			object.data = '/flash/wavplayer.swf';
-			object.width = plugin.settings.desired_tb_width;
-			object.height = '30';
-			object.align = 'middle';
-			object.id = 'iapAudio' + num;
-			previewDiv.appendChild(object);
+			// IE is a pain.	Let's jump through hoops to at least get IE9 working.
+			if (Prototype.Browser.IE) {
+				previewDiv.innerHTML = '<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" ' +
+					'width="' + plugin.settings.max_tb_width + '" height="30" id="iapAudio' + num + '" ' +
+					'align="middle"><param name="movie" value="/test/wavplayer.swf"/><param name="flashvars" value="' +
+					'gui=full&button_color=#000000&h=30&w=' + plugin.settings.max_tb_width +
+					'&sound=' + anchor.href + '%3F' + ext + '"/></object>';
+			} else {
+				object = document.createElement('object');
+				object.type = 'application/x-shockwave-flash';
+				// We're not allowed to upload flash content into a plugin content store.
+				// Until that's available, we have to copy the flash content onto the
+				// server ($SPICEWORKS_HOME\pkg\gems\spiceworks_public-*\flash).
+				//object.data = plugin.contentUrl('/flash/wavplayer.swf');
+				object.data = '/flash/wavplayer.swf';
+				object.width = plugin.settings.max_tb_width;
+				object.height = '30';
+				object.align = 'middle';
+				object.id = 'iapAudio' + num;
+				previewDiv.appendChild(object);
 
-			param = document.createElement('param');
-			param.name = 'flashvars';
-			param.value = 'gui=full&button_color=#000000&h=' + object.height + '&w=' + object.width + '&sound=' + anchor.href + '%3F' + ext;
-			object.appendChild(param);
+				param = document.createElement('param');
+				param.name = 'flashvars';
+				param.value = 'gui=full&button_color=#000000&h=' + object.height + '&w=' + object.width + '&sound=' + anchor.href + '%3F' + ext;
+				object.appendChild(param);
+			}
 		}
 	}
 
@@ -248,7 +259,6 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 			anchors, i;
 
 		attachmentRegExp = /\/tickets\/attachment/i;
-		audioRegExp = /\.(au|raw|sln(\d{1,3})?|al(aw)?|ul(aw)?|pcm|mu|la|lu|gsm|mp3|wave?)/i;
 
 		// Only IE & Safari support TIFF as of Feb 2013, but Prototype can't
 		// differentiate between Webkit browsers, so I'm not about to try.
@@ -256,6 +266,12 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 			imageRegExp = /\.(png|jpe?g|gif|bmp|tiff?)/i;
 		} else {
 			imageRegExp = /\.(png|jpe?g|gif|bmp)/i;
+		}
+
+		if (plugin.settings.audio_pref === 'Flash') {
+			audioRegExp = /\.(au|raw|sln(\d{1,3})?|al(aw)?|ul(aw)?|pcm|mu|la|lu|gsm|mp3|wave?)$/i;
+		} else {
+			audioRegExp = /\.(mp3|m4a|ogg|oga|webma|wav)$/i;
 		}
 
 		anchors = document.getElementById('item_summary_content').getElementsByTagName('a');
@@ -266,7 +282,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 
 			if (attachmentRegExp.test(anchors[i].href) && imageRegExp.test(anchors[i].innerHTML)) {
 				iapImageHandler(anchors[i], i);
-			} else if (attachmentRegExp.test(anchors[i].href) && audioRegExp.test(anchors[i].innerHTML) && !plugin.settings.disable_audio) {
+			} else if (attachmentRegExp.test(anchors[i].href) && audioRegExp.test(anchors[i].innerHTML) && plugin.settings.audio_pref !== 'Disabled') {
 				iapAudioHandler(anchors[i], i);
 			} else if (attachmentRegExp.test(anchors[i].href) && !imageRegExp.test(anchors[i].innerHTML)) {
 				iapOtherHandler(anchors[i], i);
