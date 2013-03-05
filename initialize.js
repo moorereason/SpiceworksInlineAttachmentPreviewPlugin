@@ -197,7 +197,8 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 	/// Process an audio attachment
 	///
 	function iapAudioHandler(anchor, num) {
-		var comment, previewDiv, audio, object, param, ext;
+		var comment, previewDiv, audio, object, param, ext,
+			height = 32;
 
 		if (DEBUG) { console.log('AUDIO: ' + anchor.href + '|' + anchor.innerHTML); }
 
@@ -220,9 +221,9 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 			// IE is a pain.	Let's jump through hoops to at least get IE9 working.
 			if (Prototype.Browser.IE) {
 				previewDiv.innerHTML = '<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" ' +
-					'width="' + plugin.settings.max_tb_width + '" height="30" id="iapAudio' + num + '" ' +
+					'width="' + plugin.settings.max_tb_width + '" height="' + height + '" id="iapAudio' + num + '" ' +
 					'align="middle"><param name="movie" value="/test/wavplayer.swf"/><param name="flashvars" value="' +
-					'gui=full&button_color=#000000&h=30&w=' + plugin.settings.max_tb_width +
+					'gui=full&button_color=#000000&h=' + height + '&w=' + plugin.settings.max_tb_width +
 					'&sound=' + anchor.href + '%3F' + ext + '"/></object>';
 			} else {
 				object = document.createElement('object');
@@ -233,14 +234,14 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 				//object.data = plugin.contentUrl('/flash/wavplayer.swf');
 				object.data = '/flash/wavplayer.swf';
 				object.width = plugin.settings.max_tb_width;
-				object.height = '30';
+				object.height = height;
 				object.align = 'middle';
 				object.id = 'iapAudio' + num;
 				previewDiv.appendChild(object);
 
 				param = document.createElement('param');
 				param.name = 'flashvars';
-				param.value = 'gui=full&button_color=#000000&h=' + object.height + '&w=' + object.width + '&sound=' + anchor.href + '%3F' + ext;
+				param.value = 'gui=full&button_color=#eeeeee&h=' + object.height + '&w=' + object.width + '&sound=' + anchor.href + '%3F' + ext;
 				object.appendChild(param);
 			}
 		}
