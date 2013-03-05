@@ -77,7 +77,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 	/// Show Image Viewer
 	///
 	function iapShowViewer(obj) {
-		var num, div, img, span, br, width, factor;
+		var num, div, img, width, factor;
 
 		// Hide any visible viewers
 		iapHideViewers();
@@ -97,7 +97,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 			// Since we're linking to an image that should
 			// already be loaded in the DOM, we'll bypass
 			// using the onLoad stuff
-			img = document.createElement('img');
+			img = Builder.node('img');
 			img.src = obj.src;
 
 			// If the client computer's screen width is smaller than
@@ -129,8 +129,6 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 	function iapFinishThumbImg() {
 		if (DEBUG) { console.log('IMAGE LOADED: ' + this.id); }
 
-		this.className = 'iapDrop';
-
 		// If the image is small, we don't need to setup for the viewer
 		if (this.width <= plugin.settings.max_tb_width) {
 			this.style.width = this.width;
@@ -158,20 +156,14 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 
 		// Create viewer div
 		body = document.getElementsByTagName('body')[0];
-		viewerDiv = document.createElement('div');
-		viewerDiv.id = 'iapViewer' + num;
-		viewerDiv.className = 'iapViewer';
+		viewerDiv = Builder.node('div', {id: 'iapViewer' + num, className: 'iapViewer'});
 		body.appendChild(viewerDiv);
 
 		// Create preview div
-		previewDiv = document.createElement('div');
-		previewDiv.className = 'iapImgContainer';
+		previewDiv = Builder.node('div', {className: 'iapImgContainer'});
 
 		// Build the img tag
-		img = document.createElement('img');
-		img.id = 'iapImg' + num;
-		// Hide until it's loaded
-		img.style.visibility = 'hidden';
+		img = Builder.node('img', {id: 'iapImg' + num, className: 'iapDrop'});
 
 		// We need the image to load into the DOM before
 		// we can know its dimensions, so we'll use an
@@ -189,7 +181,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 	/// Process an audio attachment
 	///
 	function iapAudioHandler(anchor, num) {
-		var comment, previewDiv, audio, object, param, ext,
+		var comment, previewDiv, audio, object, ext,
 			height = 32;
 
 		if (DEBUG) { console.log('AUDIO: ' + anchor.href + '|' + anchor.innerHTML); }
@@ -197,8 +189,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 		// Get the list item of the current comment
 		comment = anchor.parentNode.parentNode.parentNode;
 
-		previewDiv = document.createElement('div');
-		previewDiv.className = 'iapAudioPreview';
+		previewDiv = Builder.node('div', {className: 'iapAudioPreview'});
 		comment.appendChild(previewDiv);
 
 		// Find audio file extension
@@ -218,23 +209,16 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 					'gui=full&button_color=#000000&h=' + height + '&w=' + plugin.settings.max_tb_width +
 					'&sound=' + anchor.href + '%3F' + ext + '"/></object>';
 			} else {
-				object = document.createElement('object');
-				object.type = 'application/x-shockwave-flash';
-				// We're not allowed to upload flash content into a plugin content store.
-				// Until that's available, we have to copy the flash content onto the
-				// server ($SPICEWORKS_HOME\pkg\gems\spiceworks_public-*\flash).
-				//object.data = plugin.contentUrl('/flash/wavplayer.swf');
-				object.data = '/flash/wavplayer.swf';
-				object.width = plugin.settings.max_tb_width;
-				object.height = height;
-				object.align = 'middle';
-				object.id = 'iapAudio' + num;
+				object = Builder.node('object', {type: 'application/x-shockwave-flash',
+					data:	'/flash/wavplayer.swf',
+					width:	plugin.settings.max_tb_width,
+					height:	height,
+					align:	'middle',
+					id:		'iapAudio' + num}, [
+						Builder.node('param', {name: 'flashvars',
+							value: 'gui=full&button_color=#eeeeee&h=' + height + '&w=' + plugin.settings.max_tb_width + '&sound=' + anchor.href + '%3F' + ext})
+					]);
 				previewDiv.appendChild(object);
-
-				param = document.createElement('param');
-				param.name = 'flashvars';
-				param.value = 'gui=full&button_color=#eeeeee&h=' + object.height + '&w=' + object.width + '&sound=' + anchor.href + '%3F' + ext;
-				object.appendChild(param);
 			}
 		}
 	}
@@ -242,18 +226,13 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 	///
 	/// Process unknown attachment; just insert an generic icon
 	///
-	function iapOtherHandler(anchor, num) {
-		var comment, previewDiv, img;
+	function iapOtherHandler(anchor) {
+		var comment, previewDiv;
 
 		comment = anchor.parentNode.parentNode.parentNode;
 
-		previewDiv = document.createElement('div');
-		previewDiv.className = 'iapImgContainer';
-
-		img = document.createElement('img');
-		img.src = plugin.contentUrl('document.png');
-
-		previewDiv.appendChild(img);
+		previewDiv = Builder.node('div', {className: 'iapImgContainer'});
+		previewDiv.appendChild(Builder.node('img', {src: plugin.contentUrl('document.png')}));
 		comment.appendChild(previewDiv);
 	}
 
@@ -288,7 +267,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 			// Sigh.  Different browsers support different codecs for HTML5 Audio.
 			iapHelper.Audio = (function () {
 				var bool = false,
-					audio = document.createElement('audio');
+					audio = Builder.node('audio');
 
 				try {
 					bool = !!audio.canPlayType;
@@ -346,7 +325,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 				}
 
 			} else if (attachmentRegExp.test(anchors[i].href) && !imageRegExp.test(anchors[i].innerHTML)) {
-				iapOtherHandler(anchors[i], i);
+				iapOtherHandler(anchors[i]);
 			}
 		}
 	}
