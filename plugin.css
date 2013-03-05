@@ -11,6 +11,9 @@
   top:50px;
   box-shadow:5px 5px 5px #969697;
 }
+.iapViewer span {
+  font-size: 120%;
+}
 .iapDrop {
   box-shadow:5px 5px 5px #969697;
 }

@@ -91,13 +91,8 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 		// otherwise, just leave it alone
 		if (div.innerHTML.blank()) {
 			// Create a box at the top of the viewer
-			span = document.createElement('span');
-			span.style.fontSize = '120%';
-			span.innerHTML = 'Click to close';
-			div.appendChild(span);
-
-			br = document.createElement('br');
-			div.appendChild(br);
+			div.appendChild(Builder.node('span', {}, 'Click to close');
+			div.appendChild(Builder.node('br'));
 
 			// Since we're linking to an image that should
 			// already be loaded in the DOM, we'll bypass
