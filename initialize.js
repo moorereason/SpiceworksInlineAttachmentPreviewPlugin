@@ -1,10 +1,8 @@
-/*
-Inline Attachment Preview
-Created by Cameron Moore.
-Based on the "Pop-up inline attachment viewer" by Rob Dunn.
-
-https://github.com/moorereason/SpiceworksInlineAttachmentPreviewPlugin
-*/
+// Name:		Inline Attachment Preview
+// Author:		Cameron Moore (Based on plugin by: Rob Dunn)
+// Description:	A plugin to preview image and audio attachments inline in a helpdesk ticket.
+// Version:		0.7
+// Website:		https://github.com/moorereason/SpiceworksInlineAttachmentPreviewPlugin
 
 plugin.includeStyles();
 plugin.configure({
