@@ -36,8 +36,24 @@ plugin.configure({
 	]
 });
 
+function iapLoadScript(url) {
+	var script;
+	if ($$('head')[0] !== null) {
+		script = new Element('script', { type: 'text/javascript', src: url });
+		$$('head')[0].appendChild(script);
+
+		new PeriodicalExecuter(function (pe) {
+			if (typeof swfobject === 'undefined') {
+				pe.stop();
+			}
+		}, 0.25);
+	}
+}
+
 SPICEWORKS.app.helpdesk.ticket.ready(function () {
-	var DEBUG = true;
+	var iapHelper = {},
+		DEBUG = true;
+
 
 	///
 	/// Close the viewer
@@ -256,7 +272,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 	///
 	function iapMain() {
 		var attachmentRegExp, imageRegExp, audioRegExp,
-			anchors, i;
+			anchors, i, exts;
 
 		attachmentRegExp = /\/tickets\/attachment/i;
 
@@ -269,9 +285,53 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 		}
 
 		if (plugin.settings.audio_pref === 'Flash') {
-			audioRegExp = /\.(au|raw|sln(\d{1,3})?|al(aw)?|ul(aw)?|pcm|mu|la|lu|gsm|mp3|wave?)$/i;
-		} else {
-			audioRegExp = /\.(mp3|m4a|ogg|oga|webma|wav)$/i;
+			// Load swfobject to detect flash
+			iapLoadScript(plugin.contentUrl('swfobject.js'));
+			iapHelper.Flash = (swfobject.getFlashPlayerVersion().major > 0);
+
+			if (iapHelper.Flash) {
+				audioRegExp = /\.(au|raw|sln(\d{1,3})?|al(aw)?|ul(aw)?|pcm|mu|la|lu|gsm|mp3|wave?)$/i;
+			} else {
+				audioRegExp = /\.$/;
+			}
+		} else if (plugin.settings.audio_pref === 'HTML5') {
+			// Sigh.  Different browsers support different codecs for HTML5 Audio.
+			iapHelper.Audio = (function () {
+				var bool = false,
+					audio = document.createElement('audio');
+
+				try {
+					bool = !!audio.canPlayType;
+					if (bool) {
+						bool = new Boolean(bool);
+
+						bool.ogg = (audio.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, '') !== '');
+						bool.mp3 = (audio.canPlayType('audio/mpeg;').replace(/^no$/, '') !== '');
+						bool.wav = (audio.canPlayType('audio/wav; codecs="1"').replace(/^no$/, '') !== '');
+						bool.aac = ((audio.canPlayType('audio/x-m4a;') || audio.canPlayType('audio/aac;') || audio.canPlay('audio/mp4;')).replace(/^no$/, '') !== '');
+						bool.webm = (audio.canPlayType('audio/webm').replace(/^no$/, '') !== '');
+					}
+				} catch (e) { }
+
+				return bool;
+			}());
+
+			// If we don't support HTML5 Audio, bail out
+			if (iapHelper.Audio) {
+
+				// Build our regex pattern based on browser capabilities
+				exts = [];
+				if (iapHelper.Audio.ogg) { exts.push('ogg', 'oga'); }
+				if (iapHelper.Audio.mp3) { exts.push('mp3'); }
+				if (iapHelper.Audio.wav) { exts.push('wav'); }
+				if (iapHelper.Audio.aac) { exts.push('m4a', 'aac'); }
+				if (iapHelper.Audio.aac) { exts.push('webma'); }
+
+				audioRegExp = new RegExp('\\.(' + exts.join('|') + ')$', 'i');
+				if (DEBUG) { console.log('AUDIO REGEX: ' + '\\.(' + exts.join('|') + ')$'); }
+			} else {
+				audioRegExp = /\.$/;
+			}
 		}
 
 		anchors = document.getElementById('item_summary_content').getElementsByTagName('a');
@@ -282,8 +342,19 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 
 			if (attachmentRegExp.test(anchors[i].href) && imageRegExp.test(anchors[i].innerHTML)) {
 				iapImageHandler(anchors[i], i);
-			} else if (attachmentRegExp.test(anchors[i].href) && audioRegExp.test(anchors[i].innerHTML) && plugin.settings.audio_pref !== 'Disabled') {
-				iapAudioHandler(anchors[i], i);
+			} else if (attachmentRegExp.test(anchors[i].href) && audioRegExp.test(anchors[i].innerHTML)	&& plugin.settings.audio_pref !== 'Disabled') {
+
+				// if we're using HTML, make sure
+				if (plugin.settings.audio_pref === 'HTML5') {
+					if (iapHelper.Audio) {
+						iapAudioHandler(anchors[i], i);
+					}
+				} else if (plugin.settings.audio_pref === 'Flash') {
+					if (iapHelper.Flash) {
+						iapAudioHandler(anchors[i], i);
+					}
+				}
+
 			} else if (attachmentRegExp.test(anchors[i].href) && !imageRegExp.test(anchors[i].innerHTML)) {
 				iapOtherHandler(anchors[i], i);
 			}
