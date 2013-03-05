@@ -4,12 +4,12 @@
 	z-index: 999;
 	overflow: hidden;
 	visibility: hidden;
-	background: #3B3B3C;
-	color: white;
+	background: #444;
+	color: #FFF;
 	text-align: center;
 	right: 20px;
 	top: 50px;
-	box-shadow: 5px 5px 5px #969697;
+	box-shadow: 5px 5px 5px #999;
 }
 .iapViewer span {
 	font-size: 120%;
@@ -18,8 +18,7 @@
 	curser: pointer;
 }
 .iapDrop {
-	box-shadow: 5px 5px 5px #969697;
-	text-align: center;
+	box-shadow: 5px 5px 5px #999;
 	visibility: hidden;
 }
 .iapImgContainer {
