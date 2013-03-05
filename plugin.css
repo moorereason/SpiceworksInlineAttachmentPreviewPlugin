@@ -14,8 +14,12 @@
 .iapViewer span {
   font-size: 120%;
 }
+.iapViewer img {
+  curser: pointer;
+}
 .iapDrop {
   box-shadow:5px 5px 5px #969697;
+  text-align: center;
 }
 .iapImgContainer {
  padding-left:20px;

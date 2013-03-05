@@ -91,7 +91,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 		// otherwise, just leave it alone
 		if (div.innerHTML.blank()) {
 			// Create a box at the top of the viewer
-			div.appendChild(Builder.node('span', {}, 'Click to close');
+			div.appendChild(Builder.node('span', {}, 'Click to close'));
 			div.appendChild(Builder.node('br'));
 
 			// Since we're linking to an image that should
@@ -130,7 +130,6 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 		if (DEBUG) { console.log('IMAGE LOADED: ' + this.id); }
 
 		this.className = 'iapDrop';
-		this.style.textalign = 'center';
 
 		// If the image is small, we don't need to setup for the viewer
 		if (this.width <= plugin.settings.max_tb_width) {
@@ -253,9 +252,6 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 
 		img = document.createElement('img');
 		img.src = plugin.contentUrl('document.png');
-		img.style.height = 'auto';
-		img.style.textalign = 'center';
-		img.id = 'iapDoc' + num;
 
 		previewDiv.appendChild(img);
 		comment.appendChild(previewDiv);
