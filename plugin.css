@@ -1,30 +1,30 @@
 .iapViewer {
-	position: fixed;
-	height: auto;
-	z-index: 999;
-	overflow: hidden;
-	visibility: hidden;
-	background: #444;
-	color: #FFF;
-	text-align: center;
-	right: 20px;
-	top: 50px;
-	box-shadow: 5px 5px 5px #999;
+	background:#444;
+	box-shadow:5px 5px 5px #999;
+	color:#FFF;
+	height:auto;
+	overflow:hidden;
+	position:fixed;
+	right:20px;
+	text-align:center;
+	top:50px;
+	visibility:hidden;
+	z-index:999
 }
 .iapViewer span {
-	font-size: 120%;
+	font-size:120%
 }
 .iapViewer img {
-	curser: pointer;
+	curser:pointer
 }
 .iapDrop {
-	box-shadow: 5px 5px 5px #999;
-	visibility: hidden;
+	box-shadow:5px 5px 5px #999;
+	visibility:hidden
 }
 .iapImgContainer {
-	padding-left: 20px;
-	padding-bottom: 10px;
+	padding-bottom:10px;
+	padding-left:20px
 }
 .iapAudioPreview {
-	padding: 10px 0 10px 40px;
+	padding:10px 0 10px 40px
 }
