@@ -205,7 +205,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 			if (Prototype.Browser.IE) {
 				previewDiv.innerHTML = '<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" ' +
 					'width="' + plugin.settings.max_tb_width + '" height="' + height + '" id="iapAudio' + num + '" ' +
-					'align="middle"><param name="movie" value="/test/wavplayer.swf"/><param name="flashvars" value="' +
+					'align="middle"><param name="movie" value="/flash/wavplayer.swf"/><param name="flashvars" value="' +
 					'gui=full&button_color=#000000&h=' + height + '&w=' + plugin.settings.max_tb_width +
 					'&sound=' + anchor.href + '%3F' + ext + '"/></object>';
 			} else {
@@ -312,8 +312,6 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 			if (attachmentRegExp.test(anchors[i].href) && imageRegExp.test(anchors[i].innerHTML)) {
 				iapImageHandler(anchors[i], i);
 			} else if (attachmentRegExp.test(anchors[i].href) && audioRegExp.test(anchors[i].innerHTML)	&& plugin.settings.audio_pref !== 'Disabled') {
-
-				// if we're using HTML, make sure
 				if (plugin.settings.audio_pref === 'HTML5') {
 					if (iapHelper.Audio) {
 						iapAudioHandler(anchors[i], i);
@@ -323,7 +321,6 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 						iapAudioHandler(anchors[i], i);
 					}
 				}
-
 			} else if (attachmentRegExp.test(anchors[i].href) && !imageRegExp.test(anchors[i].innerHTML)) {
 				iapOtherHandler(anchors[i]);
 			}
