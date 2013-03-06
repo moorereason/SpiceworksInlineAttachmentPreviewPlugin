@@ -311,7 +311,7 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 
 			if (attachmentRegExp.test(anchors[i].href) && imageRegExp.test(anchors[i].innerHTML)) {
 				iapImageHandler(anchors[i], i);
-			} else if (attachmentRegExp.test(anchors[i].href) && audioRegExp.test(anchors[i].innerHTML)	&& plugin.settings.audio_pref !== 'Disabled') {
+			} else if (attachmentRegExp.test(anchors[i].href) && audioRegExp.test(anchors[i].innerHTML) && plugin.settings.audio_pref !== 'Disabled') {
 				if (plugin.settings.audio_pref === 'HTML5') {
 					if (iapHelper.Audio) {
 						iapAudioHandler(anchors[i], i);
