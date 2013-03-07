@@ -1,7 +1,7 @@
 // Name:		Inline Attachment Preview
 // Author:		Cameron Moore (Based on plugin by: Rob Dunn)
 // Description:	A plugin to preview image and audio attachments inline in a helpdesk ticket.
-// Version:		0.7
+// Version:		0.8
 // Website:		https://github.com/moorereason/SpiceworksInlineAttachmentPreviewPlugin
 
 plugin.includeStyles();
