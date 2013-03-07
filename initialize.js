@@ -112,8 +112,8 @@ SPICEWORKS.app.helpdesk.ticket.ready(function () {
 			// take smaller one
 			factor = Math.min((document.viewport.getHeight() - 60) / img.height, width / img.width);
 
-			img.style.width = img.width * factor + 'px';
-			img.style.height = img.height * factor + 'px';
+			img.style.width = (img.width * factor).floor() + 'px';
+			img.style.height = (img.height * factor).floor() + 'px';
 			img.style.cursor = 'pointer';
 			img.onclick = function () { iapCloseViewer(this); };
 
