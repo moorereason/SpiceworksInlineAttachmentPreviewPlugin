@@ -14,16 +14,12 @@
 .iapViewer span {
 	font-size:120%
 }
-.iapViewer img {
-	curser:pointer
-}
 .iapDrop {
 	box-shadow:5px 5px 5px #999;
 	visibility:hidden
 }
 .iapImgContainer {
-	padding-bottom:10px;
-	padding-left:20px
+	padding: 10px 0 10px 40px
 }
 .iapAudioPreview {
 	padding:10px 0 10px 40px
