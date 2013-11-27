@@ -18,7 +18,7 @@ browsers support different audio codecs.
 
 Requirements
 ------------
-* [Spiceworks](http://www.spiceworks.com)
+* [Spiceworks](http://www.spiceworks.com) (works with Helpdesk v1 or v2!)
 * [WavPlayer](https://github.com/francois2metz/WavPlayer) (for Flash option)
 
 Installing Flash WavPlayer
