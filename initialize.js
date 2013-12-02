@@ -119,10 +119,43 @@ plugin.configure({
   }
 
   /**
+   * Set image dimensions upon load
+   */
+  function iapFinishViewerImg() {
+    var width, viewHeight, factor, origHeight;
+
+    if (DEBUG) { console.log('VIEWER IMAGE LOADED: ' + this.src); }
+
+    // If the client computer's screen width is smaller than
+    // the preferred pop-up image width setting, then reset
+    // that preference half the screen width.
+    if (document.viewport.getWidth() < plugin.settings.max_viewer_width) {
+      width = document.viewport.getWidth() / 2;
+    } else {
+      width = plugin.settings.max_viewer_width;
+    }
+    
+    // take smaller one
+    viewHeight = document.viewport.getHeight();
+    origHeight = this.height;
+    factor = Math.min((viewHeight - 60) / this.height, width / this.width);
+    
+    this.style.width = (this.width * factor).floor() + 'px';
+    // if the image scaled down, don't compute a new height
+    if (this.height == origHeight) {
+      this.style.height = (this.height * factor).floor() + 'px';
+    }
+    this.style.cursor = 'pointer';
+    this.onclick = function () { iapCloseViewer(this); };
+
+    this.parentNode.style.visibility = 'visible';
+  }
+
+  /**
    * Show Image Viewer
    */
   function iapShowViewer(obj) {
-    var num, div, img, width, factor;
+    var num, div, img;
 
     // Hide any visible viewers
     iapHideViewers();
@@ -143,29 +176,18 @@ plugin.configure({
       // already be loaded in the DOM, we'll bypass
       // using the onLoad stuff
       img = Builder.node('img');
+
+      // We need the image to load into the DOM before
+      // we can know its dimensions, so we'll use an
+      // onLoad function to finish things up.
+      // NOTE: IE needs onload() set before the src.
+      img.onload = iapFinishViewerImg;
       img.src = obj.src;
 
-      // If the client computer's screen width is smaller than
-      // the preferred pop-up image width setting, then reset
-      // that preference half the screen width.
-      if (document.viewport.getWidth() < plugin.settings.max_viewer_width) {
-        width = document.viewport.getWidth() / 2;
-      } else {
-        width = plugin.settings.max_viewer_width;
-      }
-
-      // take smaller one
-      factor = Math.min((document.viewport.getHeight() - 60) / img.height, width / img.width);
-
-      img.style.width = (img.width * factor).floor() + 'px';
-      img.style.height = (img.height * factor).floor() + 'px';
-      img.style.cursor = 'pointer';
-      img.onclick = function () { iapCloseViewer(this); };
-
       div.appendChild(img);
+    } else {
+      div.style.visibility = 'visible';
     }
-
-    div.style.visibility = 'visible';
   }
 
   /**
