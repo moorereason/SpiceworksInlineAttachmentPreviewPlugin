@@ -332,6 +332,7 @@ plugin.configure({
       if (iapHelper.Flash) {
         audioRegExp = /\.(au|raw|sln(\d{1,3})?|al(aw)?|ul(aw)?|pcm|mu|la|lu|gsm|mp3|wave?)$/i;
       } else {
+        if (DEBUG) { console.log('---- iapHelper.Flash was FALSE'); }
         audioRegExp = /\.$/;
       }
     } else if (plugin.settings.audio_pref === 'HTML5') {
@@ -348,8 +349,10 @@ plugin.configure({
             bool.ogg = (audio.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, '') !== '');
             bool.mp3 = (audio.canPlayType('audio/mpeg;').replace(/^no$/, '') !== '');
             bool.wav = (audio.canPlayType('audio/wav; codecs="1"').replace(/^no$/, '') !== '');
-            bool.aac = ((audio.canPlayType('audio/x-m4a;') || audio.canPlayType('audio/aac;') || audio.canPlay('audio/mp4;')).replace(/^no$/, '') !== '');
+            bool.aac = ((audio.canPlayType('audio/x-m4a;') || audio.canPlayType('audio/aac;') || audio.canPlayType('audio/mp4;')).replace(/^no$/, '') !== '');
             bool.webm = (audio.canPlayType('audio/webm').replace(/^no$/, '') !== '');
+          } else {
+            if (DEBUG) { console.log('---- Audio support not detected'); }
           }
         } catch (e) { }
 
@@ -370,9 +373,11 @@ plugin.configure({
         audioRegExp = new RegExp('\\.(' + exts.join('|') + ')$', 'i');
         if (DEBUG) { console.log('AUDIO REGEX: ' + '\\.(' + exts.join('|') + ')$'); }
       } else {
+        if (DEBUG) { console.log('---- iapHelper.Audio was FALSE'); }
         audioRegExp = /\.$/;
       }
     } else {
+      if (DEBUG) { console.log('---- Audio support disabled'); }
       audioRegExp = /\.$/;
     }
 
