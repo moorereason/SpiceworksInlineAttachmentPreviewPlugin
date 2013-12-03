@@ -1,7 +1,7 @@
 // Name:        Inline Attachment Preview
 // Author:      Cameron Moore (Based on plugin by: Rob Dunn)
 // Description: A plugin to preview image and audio attachments inline in a helpdesk ticket.
-// Version:     0.8
+// Version:     0.9
 // Website:     https://github.com/moorereason/SpiceworksInlineAttachmentPreviewPlugin
 
 plugin.includeStyles();
@@ -312,7 +312,7 @@ plugin.configure({
    * Process unknown attachment; just insert an generic icon
    */
   function iapOtherHandler(anchor) {
-    var comment, previewDiv;
+    var comment, previewDiv, previewAnchor;
 
     comment = iapGetPreviewTargetFromAnchor(anchor);
     if (comment == null) {
@@ -325,7 +325,10 @@ plugin.configure({
     }
 
     previewDiv = Builder.node('div', {className: 'iapImgContainer'});
-    previewDiv.appendChild(Builder.node('img', {src: plugin.contentUrl('document.png')}));
+    previewAnchor = Builder.node('a', { href: anchor.href });
+    
+    previewAnchor.appendChild(Builder.node('img', {src: plugin.contentUrl('document.png')}));
+    previewDiv.appendChild(previewAnchor);
     comment.appendChild(previewDiv);
   }
 
