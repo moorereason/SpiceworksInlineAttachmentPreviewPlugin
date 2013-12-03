@@ -289,7 +289,7 @@ plugin.configure({
         previewDiv.innerHTML = '<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" ' +
           'width="' + plugin.settings.max_tb_width + '" height="' + height + '" id="iapAudio' + num + '" ' +
           'align="middle"><param name="movie" value="/flash/wavplayer.swf"/><param name="flashvars" value="' +
-          'gui=full&button_color=#000000&h=' + height + '&w=' + plugin.settings.max_tb_width +
+          'gui=full&button_color=#eeeeee&h=' + height + '&w=' + plugin.settings.max_tb_width +
           '&sound=' + anchor.href + '%3F' + ext + '"/></object>';
       } else {
         object = Builder.node('object', {type: 'application/x-shockwave-flash',
@@ -298,8 +298,10 @@ plugin.configure({
           height:  height,
           align:  'middle',
           id:    'iapAudio' + num}, [
-            Builder.node('param', {name: 'flashvars',
-              value: 'gui=full&button_color=#eeeeee&h=' + height + '&w=' + plugin.settings.max_tb_width + '&sound=' + anchor.href + '%3F' + ext})
+            Builder.node('param', {
+              name: 'flashvars',
+              value: 'gui=full&button_color=#eeeeee&h=' + height + '&w=' + plugin.settings.max_tb_width + '&sound=' + anchor.href + '%3F' + ext
+            })
           ]);
         previewDiv.appendChild(object);
       }
