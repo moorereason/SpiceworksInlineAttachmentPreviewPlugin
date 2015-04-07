@@ -1,10 +1,9 @@
 // Name:        Inline Attachment Preview
 // Author:      Cameron Moore (Based on plugin by: Rob Dunn)
-// Description: A plugin to preview image and audio attachments inline in a helpdesk ticket.
-// Version:     0.9
+// Description: A plugin to preview audio attachments inline in a helpdesk ticket.
+// Version:     1.0
 // Website:     https://github.com/moorereason/SpiceworksInlineAttachmentPreviewPlugin
 
-plugin.includeStyles();
 plugin.configure({
   settingDefinitions: [
     {
@@ -33,6 +32,7 @@ plugin.configure({
     }
   ]
 });
+plugin.includeStyles();
 
 (function ($) {
   /**
@@ -63,10 +63,7 @@ plugin.configure({
 (function(){
 
   var iapHelper = {},
-    v2,
-    DEBUG = true;
-
-  v2 = (window.HelpDesk);
+    DEBUG = false;
 
   /**
    * Attempt to load the swfobject script from URL
@@ -92,8 +89,7 @@ plugin.configure({
   function iapGetPreviewTargetFromAnchor(a) {
     var target;
 
-    target = (v2) ? a.parentNode.select('div.body-wrapper') :
-      a.parentNode.parentNode.parentNode.select('p.body');
+    target = a.parentNode.parentNode.parentNode.select('div.body-wrapper');
 
     return (target.length > 0) ? target[0] : null;
   }
@@ -134,12 +130,12 @@ plugin.configure({
     } else {
       width = plugin.settings.max_viewer_width;
     }
-    
+
     // take smaller one
     viewHeight = document.viewport.getHeight();
     origHeight = this.height;
     factor = Math.min((viewHeight - 60) / this.height, width / this.width);
-    
+
     this.style.width = (this.width * factor).floor() + 'px';
     // if the image scaled down, don't compute a new height
     if (this.height == origHeight) {
@@ -326,7 +322,7 @@ plugin.configure({
 
     previewDiv = Builder.node('div', {className: 'iapImgContainer'});
     previewAnchor = Builder.node('a', { href: anchor.href });
-    
+
     previewAnchor.appendChild(Builder.node('img', {src: plugin.contentUrl('document.png')}));
     previewDiv.appendChild(previewAnchor);
     comment.appendChild(previewDiv);
@@ -339,7 +335,7 @@ plugin.configure({
     var attachmentRegExp, imageRegExp, audioRegExp,
       anchors, i, exts;
 
-    attachmentRegExp = /\/tickets\/attachment/i;
+    attachmentSubstring = '/tickets/attachment/';
 
     if (DEBUG) { console.log('---- IAP: iapMain()'); }
 
@@ -408,42 +404,33 @@ plugin.configure({
       audioRegExp = /\.$/;
     }
 
-    anchors = (v2) ? $$('a.dl-link') : document.getElementById('item_summary_content').getElementsByTagName('a');
+    anchors = $$('a.dl-link');
 
     for (i = 0; i < anchors.length; i += 1) {
-
       if (DEBUG) { console.log('ANCHOR: ' + anchors[i].href + '|' + anchors[i].innerHTML); }
 
-      if (attachmentRegExp.test(anchors[i].href) && imageRegExp.test(anchors[i].innerHTML)) {
+      if (anchors[i].href.indexOf(attachmentSubstring) === -1) {
+        continue;
+      }
+
+      if (imageRegExp.test(anchors[i].innerHTML)) {
         iapImageHandler(anchors[i], i);
-      } else if (attachmentRegExp.test(anchors[i].href) && audioRegExp.test(anchors[i].innerHTML) && plugin.settings.audio_pref !== 'Disabled') {
-        if (plugin.settings.audio_pref === 'HTML5') {
-          if (iapHelper.Audio) {
-            iapAudioHandler(anchors[i], i);
-          }
-        } else if (plugin.settings.audio_pref === 'Flash') {
-          if (iapHelper.Flash) {
-            iapAudioHandler(anchors[i], i);
-          }
+      } else if (plugin.settings.audio_pref !== 'Disabled' && audioRegExp.test(anchors[i].innerHTML)) {
+        if (plugin.settings.audio_pref === 'HTML5' && iapHelper.Audio) {
+          iapAudioHandler(anchors[i], i);
+        } else if (plugin.settings.audio_pref === 'Flash' && iapHelper.Flash) {
+          iapAudioHandler(anchors[i], i);
         }
-      } else if (attachmentRegExp.test(anchors[i].href) && !imageRegExp.test(anchors[i].innerHTML)) {
+      } else {
         iapOtherHandler(anchors[i]);
       }
     }
   }
 
-  /**
-   * Detect Helpdesk Version
-   */
-  if (v2) {
-    if (DEBUG) { console.log('---- IAP: HelpDesk v2 detected'); }
-
-    HelpDesk.vent.on('ticket:viewed', function(e){
-      jQuery('div.activity-event').iapWaitUntilExists(iapMain);
-    });
-  } else {
-    if (DEBUG) { console.log('---- IAP: HelpDesk v1 detected'); }
-
-    SPICEWORKS.app.helpdesk.ticket.ready(function (){ iapMain(); });
-  }
+  $UI.app.pluginEventBus.on('app:helpdesk:ticket:show', function(){
+    jQuery('div.activity-item').iapWaitUntilExists(iapMain);
+  });
+  $UI.app.pluginEventBus.on('app:helpdesk:ticket:comment:show', function(ticket) {
+    jQuery('div.activity-item').iapWaitUntilExists(iapMain);
+  });
 })()
