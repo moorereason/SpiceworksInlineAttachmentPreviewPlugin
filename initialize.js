@@ -14,7 +14,7 @@ plugin.configure({
       options: ['100', '200', '300', '400'],
       example: 'pixels'
     },
-	{
+    {
       name: 'audio_pref',
       label: 'Audio Preference',
       type: 'enumeration',
@@ -74,17 +74,18 @@ plugin.includeStyles();
   function iapGetPreviewTargetFromAnchor(a) {
     var target;
 
-    target = a.parentNode.parentNode.parentNode.select('div.body-wrapper');
+    target = a.parentNode.parentNode.select('div.body-wrapper');
 
     return (target.length > 0) ? target[0] : null;
   }
   
   // iapAudioHandler processes an audio attachment
   function iapAudioHandler(anchor, num) {
-    var comment, previewDiv, audio, object, ext,
+    var comment, previewDiv, audio, innerHTML, object, ext,
       height = 32;
 
-    if (DEBUG) { console.log('AUDIO: ' + anchor.href + '|' + anchor.innerHTML); }
+    innerHTML = anchor.innerHTML.replace(/(\r|\n)/g, "").trim()
+    if (DEBUG) { console.log('AUDIO: ' + anchor.href + '|[' + innerHTML + ']'); }
 
     comment = iapGetPreviewTargetFromAnchor(anchor);
     if (comment == null) {
@@ -103,9 +104,9 @@ plugin.includeStyles();
     comment.appendChild(previewDiv);
 
     // Find audio file extension
-    ext = anchor.innerHTML.match(/(\.[\w]+)$/)[0];
+    ext = innerHTML.match(/(\.[\w]+)$/)[0];
 
-	console.log('ext = ' + ext)
+    console.log('ext = ' + ext)
     if (plugin.settings.audio_pref === 'HTML5') {
       audio = new Audio();
       audio.controls = true;
@@ -190,8 +191,8 @@ plugin.includeStyles();
         if (iapHelper.Audio.aac) { exts.push('m4a', 'aac'); }
         if (iapHelper.Audio.aac) { exts.push('webma'); }
 
-        audioRegExp = new RegExp('\\.(' + exts.join('|') + ')$', 'i');
-        if (DEBUG) { console.log('AUDIO REGEX: ' + '\\.(' + exts.join('|') + ')$'); }
+        audioRegExp = new RegExp('\\.(' + exts.join('|') + ')\\s*$', 'i');
+        if (DEBUG) { console.log('AUDIO REGEX: ' + '\\.(' + exts.join('|') + ')\\s*$'); }
       } else {
         if (DEBUG) { console.log('---- iapHelper.Audio was FALSE'); }
         audioRegExp = /\.$/;
@@ -204,22 +205,22 @@ plugin.includeStyles();
     anchors = $$('a.dl-link');
 
     for (i = 0; i < anchors.length; i += 1) {
-      if (DEBUG) { console.log('ANCHOR: ' + anchors[i].href + '|' + anchors[i].innerHTML); }
+      if (DEBUG) { console.log('ANCHOR: ' + anchors[i].href + '|[' + anchors[i].innerHTML + ']'); }
 
       if (anchors[i].href.indexOf(attachmentSubstring) === -1) {
         continue;
       }
 
       if (!audioRegExp.test(anchors[i].innerHTML)) {
-		continue;
-	  }
-	  
+        continue;
+      }
+
       if (plugin.settings.audio_pref === 'HTML5' && iapHelper.Audio) {
         iapAudioHandler(anchors[i], i);
       } else if (plugin.settings.audio_pref === 'Flash' && iapHelper.Flash) {
         iapAudioHandler(anchors[i], i);
       }
-	}
+    }
   }
 
   $UI.app.pluginEventBus.on('app:helpdesk:ticket:show', function(){
